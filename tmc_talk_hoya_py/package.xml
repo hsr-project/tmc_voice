@@ -1,15 +1,11 @@
 <package format="3">
   <name>tmc_talk_hoya_py</name>
-  <version>2.0.0</version>
+  <version>3.0.0</version>
   <description>Providing Text to Speech Japanese and English function.</description>
 
   <maintainer email="xr-hsr-support@mail.toyota.co.jp">HSR Support</maintainer>
-
   <license>BSD 3-clause Clear License</license>
 
-  <author>Keisuke Takeshita</author>
-  <author>Kentaro Miura</author>
-  <author>Takafumi Mizuno</author>
   <author>Tamaki Nishino</author>
 
   <exec_depend>libpulse-dev</exec_depend>
