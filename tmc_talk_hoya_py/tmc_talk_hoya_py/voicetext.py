@@ -1,30 +1,28 @@
-'''
-Copyright (c) 2024 TOYOTA MOTOR CORPORATION
-All rights reserved.
-Redistribution and use in source and binary forms, with or without
-modification, are permitted (subject to the limitations in the disclaimer
-below) provided that the following conditions are met:
-* Redistributions of source code must retain the above copyright notice, this
-  list of conditions and the following disclaimer.
-* Redistributions in binary form must reproduce the above copyright notice,
-  this list of conditions and the following disclaimer in the documentation
-  and/or other materials provided with the distribution.
-* Neither the name of the copyright holder nor the names of its contributors may be used
-  to endorse or promote products derived from this software without specific
-  prior written permission.
-NO EXPRESS OR IMPLIED LICENSES TO ANY PARTY'S PATENT RIGHTS ARE GRANTED BY THIS
-LICENSE. THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
-THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
-GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
-OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
-DAMAGE.
-'''
+# Copyright (c) 2026 TOYOTA MOTOR CORPORATION
+# All rights reserved.
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted (subject to the limitations in the disclaimer
+# below) provided that the following conditions are met:
+# * Redistributions of source code must retain the above copyright notice, this
+#   list of conditions and the following disclaimer.
+# * Redistributions in binary form must reproduce the above copyright notice,
+#   this list of conditions and the following disclaimer in the documentation
+#   and/or other materials provided with the distribution.
+# * Neither the name of the copyright holder nor the names of its contributors may be used
+#   to endorse or promote products derived from this software without specific
+#   prior written permission.
+# NO EXPRESS OR IMPLIED LICENSES TO ANY PARTY'S PATENT RIGHTS ARE GRANTED BY THIS
+# LICENSE. THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+# THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
+# GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+# OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+# DAMAGE.
 # -*- coding: utf-8 -*-
 import copy
 import ctypes
@@ -50,9 +48,10 @@ class VoiceTextLibvtNotFound(VoiceTextRuntimeError):
 
 
 class VoiceTextLibrary(object):
-    u"""Cut out so that MOCK testing is easy"""
+    u"""Extracted to facilitate mock testing"""
 
     def __init__(self, library):
+        """Initialize an instance"""
         self._lang = os.path.basename(library).split('_')[1][:-3]
         self._lib = ctypes.cdll.LoadLibrary(library)
         self.VT_LOADTTS = getattr(
@@ -68,9 +67,10 @@ class VoiceTextLibrary(object):
 
 
 class AudioOut(object):
-    u"""Cut out so that MOCK testing is easy"""
+    u"""Extracted to facilitate mock testing"""
 
     def __init__(self):
+        """Initialize an instance"""
         ss = pulse.pa_sample_spec()
         ss.format = pulse.PA_SAMPLE_S16LE
         ss.channels = 1
@@ -114,6 +114,7 @@ class VoiceText(object):
     VT_FILE_API_FMT_MULAW_AU = 9     # 8bits Mu-law PCM SUN AU
 
     def __init__(self, path='/opt/tmc/vt', voice='haruka', iotype='RAMIO'):
+        """Initialize an instance"""
         root_path = os.path.join(path, voice, 'M16')
         license_path = root_path + '/data-common/verify/verification.txt'
         if not os.path.exists(license_path):
@@ -148,7 +149,7 @@ class VoiceText(object):
         slen = ctypes.c_int(0)
         flag = 0
         while True:
-            # If you can't encode, UNICODEENCODEERROR is thrown here
+            # A UnicodeEncodeError will be raised here if encoding fails
             ret = self._libvt.VT_TextToBuffer(
                 self.VT_BUFFER_API_FMT_S16PCM,
                 self.encode_message(msg),
@@ -164,23 +165,23 @@ class VoiceText(object):
             elif ret == -4:  # When the character length is 0
                 break
             else:
-                # [-1] When using the non-supported audio format
-                # [-2] If you fail to secure a channel memory
-                # [-3] When the text character string is NULL POINTER
-                # [-4] When the length of the text character string is 0
-                # [-5] If the frame buffer is NULL POINTER
-                # [-6] When the composite DB of the speaker is not loaded
+                # [-1] When an unsupported audio format is used
+                # [-2] When channel memory allocation fails
+                # [-3] When the text string is a NULL pointer
+                # [-4] When the length of the text string is 0
+                # [-5] When the frame buffer is a NULL pointer
+                # [-6] When the synthesis DB for the corresponding speaker is not loaded
                 # [-7] When the corresponding Thread ID is already in use
-                # [-8] If an error that has an unknown reason occurs
+                # [-8] When an unknown error occurs
                 raise VoiceTextRuntimeError(
                     "VT_TextToBuffer failed. ret={0}".format(ret))
 
     def to_file(self, msg, filename,
-                format=VT_FILE_API_FMT_S16PCM,
+                fmt=VT_FILE_API_FMT_S16PCM,
                 pitch=-1, speed=-1, volume=-1, pause=-1):
         filename = filename.encode()
         ret = self._libvt.VT_TextToFile(
-            format,
+            fmt,
             self.encode_message(msg),
             filename,
             -1, pitch, speed, volume, pause, 0, 0)
@@ -189,12 +190,12 @@ class VoiceText(object):
         elif ret == -4:
             return False
         else:
-            # [-1] When using the non-supported audio format
-            # [-2] If you fail to secure a channel memory
-            # [-3] When the text character string is NULL POINTER
-            # [-4] When the length of the text character string is 0
-            # [-5] When the composite DB of the speaker is not loaded
-            # [-6] If you fail to generate an audio file
+            # [-1] When an unsupported audio format is used
+            # [-2] When channel memory allocation fails
+            # [-3] When the text string is a NULL pointer
+            # [-4] When the length of the text string is 0
+            # [-5] When the synthesis DB for the corresponding speaker is not loaded
+            # [-6] When audio file generation fails
             # [-7] Other reasons
             raise VoiceTextRuntimeError(
                 "VT_TextToFile failed. ret={0}".format(ret))
@@ -202,11 +203,12 @@ class VoiceText(object):
 
 class VoiceTextSpeaker(object):
     def __init__(self, path='/opt/tmc/vt', voice='haruka', iotype='RAMIO'):
+        """Initialize an instance"""
         self._vt_lib = VoiceText(path, voice=voice, iotype=iotype)
         self._audio_out = AudioOut()
         self._queue = Queue.Queue()
         self._thread = threading.Thread(target=self._write)
-        self._thread.setDaemon(True)
+        self._thread.daemon = True
         self._finish = False
         self._thread.start()
 

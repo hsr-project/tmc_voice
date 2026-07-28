@@ -1,0 +1,4 @@
+<launch>
+    <node pkg="tmc_talk_hoya_py" type="node_driver.py" name="text_to_speech" output="screen"/>
+    <test pkg="tmc_talk_hoya_py" type="talk_request_action-test.py" test-name="test_talk_request_action" time-limit="60.0"/>
+</launch>

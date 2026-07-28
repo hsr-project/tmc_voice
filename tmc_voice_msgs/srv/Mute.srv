@@ -1,0 +1,4 @@
+# true: Enable mute   false: Disable mute
+bool mute
+---
+
